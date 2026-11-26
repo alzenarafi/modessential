@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -110,8 +109,24 @@ public class ScreenshotScreen extends Screen {
 				.bounds(cx + 40, bottom, 110, 20).build());
 	}
 
+	/** Buka file/folder pake aplikasi bawaan OS (gak bergantung ke class Minecraft). */
+	private static void openPath(Path p) {
+		String target = p.toAbsolutePath().toString();
+		String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+		try {
+			if (os.contains("win")) {
+				new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", target).start();
+			} else if (os.contains("mac")) {
+				new ProcessBuilder("open", target).start();
+			} else {
+				new ProcessBuilder("xdg-open", target).start();
+			}
+		} catch (IOException ignored) {
+		}
+	}
+
 	private void open(Path p) {
-		Util.getPlatform().openPath(p);
+		openPath(p);
 	}
 
 	private void openFolder() {
@@ -119,7 +134,7 @@ public class ScreenshotScreen extends Screen {
 			Files.createDirectories(dir);
 		} catch (IOException ignored) {
 		}
-		Util.getPlatform().openPath(dir);
+		openPath(dir);
 	}
 
 	private void delete(Path p) {
